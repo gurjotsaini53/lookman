@@ -1,5 +1,5 @@
 {
-  "name": "dbg",
+  "name": "lookman",
   "version": "1.0.0",
   "description": "A lightweight, breakpoint-free JavaScript debugging utility. Drop dbg() anywhere in your code to inspect values with color-coded output, change detection, async tracking, and more — all from a single import.",
   "keywords": [
@@ -65,7 +65,7 @@
   "license": "ISC",
   "author": ",",
   "type": "commonjs",
-  "main": "dbg.js",
+  "main": "lookman.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   }
