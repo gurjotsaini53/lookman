@@ -1,6 +1,6 @@
 {
   "name": "lookman",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "A lightweight, breakpoint-free JavaScript debugging utility. Drop dbg() anywhere in your code to inspect values with color-coded output, change detection, async tracking, and more — all from a single import.",
   "keywords": [
     "debug",

@@ -39,6 +39,7 @@ dbg(user, 'user');
 - ⏱️ **Timers** — measure elapsed time between any two points
 - 🔢 **Counters** — track how many times a code path runs
 - 📦 **Groups** — indent related logs together
+- 🛑 **Production Safe** — easily disable globally in production
 
 ---
 
@@ -157,6 +158,17 @@ Clears the internal value history. Useful in tests to reset change-detection sta
 
 ```js
 dbg.reset();
+```
+
+---
+
+### `dbg.enabled`
+
+Globally enable or disable all debugging features. Set this flag to `false` in production to ensure zero performance overhead.
+
+```js
+// Disable all lookman output
+dbg.enabled = false;
 ```
 
 ---

@@ -1,4 +1,4 @@
-// dbg.js — breakpoint-free debug assistant
+// lookman.js 
 
 const history = new Map();
 const counters = new Map();
@@ -71,6 +71,7 @@ function inferName(callSite) {
 let callCount = 0;
 
 export function dbg(value, label) {
+  if (dbg.enabled === false) return value;
   callCount++;
   const type = getType(value);
   const { fn, file, line } = parseCallSite();
@@ -154,6 +155,7 @@ function logFormatted({ file, line, fn, label, type, value, badge = '', changed 
 
 
 dbg.count = (label = 'default') => {
+  if (dbg.enabled === false) return;
   const { file, line } = parseCallSite();
   const key = `${file}:${label}`;
   const count = (counters.get(key) || 0) + 1;
@@ -165,12 +167,14 @@ dbg.count = (label = 'default') => {
 };
 
 dbg.time = (label = 'default') => {
+  if (dbg.enabled === false) return;
   timers.set(label, Date.now());
   const tag = c('bold', c('magenta', ' TIME '));
   console.log(`${tag} ${c('bold', label)} started...`);
 };
 
 dbg.timeEnd = (label = 'default') => {
+  if (dbg.enabled === false) return;
   const start = timers.get(label);
   const tag = c('bold', c('magenta', ' TIME '));
   if (!start) {
@@ -184,22 +188,26 @@ dbg.timeEnd = (label = 'default') => {
 };
 
 dbg.group = (label) => {
+  if (dbg.enabled === false) return;
   if (label) console.log(c('bold', `\n🔽 ${label}`));
   indentLevel++;
 };
 
 dbg.groupEnd = () => {
+  if (dbg.enabled === false) return;
   indentLevel = Math.max(0, indentLevel - 1);
 };
 
 dbg.table = (data, label) => {
+  if (dbg.enabled === false) return;
   const { file, line } = parseCallSite();
-  if (label) console.log(c('bold', `\n📊 TABLE: ${label} (${file}:${line})`));
+  if (label) console.log(c('bold', `\n TABLE: ${label} (${file}:${line})`));
   console.table(data);
   console.log('');
 };
 
 dbg.watch = (target, label = 'obj') => {
+  if (dbg.enabled === false) return target;
   const { file, line } = parseCallSite();
 
   const handler = {
@@ -230,11 +238,13 @@ dbg.watch = (target, label = 'obj') => {
 
 // Convenience: dbg.log acts as console.log with location
 dbg.log = (...args) => {
+  if (dbg.enabled === false) return;
   const { fn, file, line } = parseCallSite();
   console.log(c('dim', `[${file}:${line}]`), ...args);
 };
 
 dbg.track = (target, label = 'obj') => {
+  if (dbg.enabled === false) return target;
   const { file, line } = parseCallSite();
   console.log(c('dim', `\n🎯 Tracking started: ${label} [${file}:${line}] (in-place)`));
 
@@ -281,6 +291,7 @@ dbg.track = (target, label = 'obj') => {
 };
 
 dbg.silent = (value, label) => {
+  if (dbg.enabled === false) return value;
   const { file, line } = parseCallSite();
   let serialized;
   try { serialized = JSON.stringify(value); } catch { serialized = String(value); }
@@ -297,4 +308,10 @@ dbg.silent = (value, label) => {
 };
 
 // Reset history (useful in tests)
-dbg.reset = () => history.clear();
+dbg.reset = () => {
+  if (dbg.enabled === false) return;
+  history.clear();
+};
+
+// Enable by default, user can manually disable it for production
+dbg.enabled = true;
