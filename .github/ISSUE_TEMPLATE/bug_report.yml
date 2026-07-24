@@ -1,0 +1,34 @@
+---
+name: Bug report
+description: Report a bug in Lookman
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: Thanks for helping improve Lookman.
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: What went wrong?
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Reproduction
+      description: Minimal code that reproduces the issue
+      render: typescript
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Lookman version
+    validations:
+      required: true
+  - type: input
+    id: runtime
+    attributes:
+      label: Runtime
+      description: e.g. Node 22, Bun, browser

@@ -1,204 +1,210 @@
+```text
+ _                 _
+| | ___   ___ | | ___ __ ___   __ _ _ __
+| |/ _ \ / _ \| |/ / '_ ` _ \ / _` | '_ \
+| | (_) | (_) |   <| | | | | | (_| | | | |
+|_|\___/ \___/|_|\_\_| |_| |_|\__,_|_| |_|
+```
+
 # Lookman
 
-A lightweight, **breakpoint-free** JavaScript debugging utility. Drop `dbg()` anywhere in your code to inspect values with color-coded output, change detection, async tracking, and more — all from a single import.
+### A smarter `console.log()` for JavaScript.
 
----
-
-## Installation
+Debug values, detect changes, trace async operations, track mutations, and measure performance.
 
 ```bash
-# Copy dbg.js into your project
-cp lookman.js src/utils/lookman.js
+npm install lookman
 ```
 
-No npm package required. Just import and go.
+```ts
+import { dbg } from 'lookman';
 
----
-
-## Quick Start
-
-```js
-import { dbg } from './lookman.js';
-
-const user = { name: 'Alice', age: 30 };
-dbg(user, 'user');
-// Prints: file, line, function name, type, and formatted value
+const user = dbg(await fetchUser(123), 'user');
 ```
 
----
-
-## Features
-
-- 🎨 **Color-coded output** — types, values, and status are color-differentiated in the terminal
-- 🔁 **Change detection** — automatically highlights when a value changes between calls
-- ⏳ **Promise tracking** — logs pending, resolved, and rejected states with timing
-- 👀 **Reactive watching** — intercepts mutations on any object via `Proxy`
-- 🎯 **In-place tracking** — observe property changes without replacing the original object
-- 🔕 **Silent mode** — only outputs when a value changes
-- 📊 **Table view** — pretty-print arrays and objects
-- ⏱️ **Timers** — measure elapsed time between any two points
-- 🔢 **Counters** — track how many times a code path runs
-- 📦 **Groups** — indent related logs together
-- 🛑 **Production Safe** — easily disable globally in production
-
----
-
-## API Reference
-
-### `dbg(value, label?)`
-
-The core function. Logs the value with its type, source location (file, line, function), and change status.
-
-```js
-dbg(42);
-dbg(response, 'apiResponse');
-```
-
-**Returns** the original value, so it can be used inline:
-
-```js
-const result = dbg(compute(), 'result');
+```text
+ DBG  users/service.ts:42 in getUser()
+  user [Object] {
+    "id": 123,
+    "name": "Gurjot"
+  }
 ```
 
 ---
 
-### `dbg.count(label?)`
+## Why Lookman?
 
-Counts how many times this line has been called.
+`console.log` tells you a value. It does not tell you **what changed**, **where it changed**, **who changed it**, or **how long an async call took**.
 
-```js
-dbg.count('loop');
+Lookman sits between ad-hoc logging and full observability:
+
+```text
+console.log()
+      ↓
+Lookman          ← you are here
+      ↓
+Structured Logging
+      ↓
+Full Observability Platforms
 ```
+
+It is a **developer debugging and runtime inspection toolkit** — not a replacement for Pino, Winston, or Sentry.
 
 ---
 
-### `dbg.time(label?)` / `dbg.timeEnd(label?)`
+## Comparison
 
-Start and stop a named timer. Prints elapsed milliseconds.
-
-```js
-dbg.time('fetchUsers');
-await getUsers();
-dbg.timeEnd('fetchUsers'); // → fetchUsers: 142ms
-```
-
----
-
-### `dbg.group(label?)` / `dbg.groupEnd()`
-
-Indent subsequent logs within a labeled group.
-
-```js
-dbg.group('Auth Flow');
-dbg(token, 'token');
-dbg(user, 'user');
-dbg.groupEnd();
-```
+| Feature           | console.log | Lookman |
+| ----------------- | ----------- | ------- |
+| Value logging     | Yes         | Yes     |
+| Source location   | No          | Yes     |
+| Change detection  | No          | Yes     |
+| Promise tracking  | No          | Yes     |
+| Execution timing  | No          | Yes     |
+| Mutation tracking | No          | Yes     |
+| Counters          | No          | Yes     |
+| Object watching   | No          | Yes     |
+| Structured JSON   | No          | Yes     |
 
 ---
 
-### `dbg.table(data, label?)`
+## Quick start
 
-Pretty-print arrays or objects using `console.table`.
+```ts
+import { dbg } from 'lookman';
 
-```js
-dbg.table(users, 'users');
+// Inline value inspection (returns the same value)
+const total = dbg(cart.reduce((s, i) => s + i.price, 0), 'total');
+
+// Promises
+const user = await dbg(fetchUser(id), 'user');
+
+// Mutations — who changed it?
+const state = dbg.track({ user: { name: 'Gurjot' } }, 'state');
+state.user.name = 'John';
+// ⚡ TRACK  state.user.name  "Gurjot" → "John"
 ```
 
----
+Disable in production:
 
-### `dbg.watch(target, label?)`
-
-Wraps an object in a `Proxy` and logs every property mutation. Supports deep/nested objects.
-
-```js
-const state = dbg.watch({ count: 0 }, 'state');
-state.count = 1; // → ⚡ WATCH [file:line] state.count -> 1 (was: 0)
-```
-
-> **Note:** Returns a new proxied object — reassign your variable to the return value.
-
----
-
-### `dbg.track(target, label?)`
-
-Like `dbg.watch` but mutates the object **in place** using `Object.defineProperty`. Use when you can't replace the original reference.
-
-```js
-const config = { debug: false };
-dbg.track(config, 'config');
-config.debug = true; // → ⚡ TRACK [file:line] config.debug -> true (was: false)
-```
-
----
-
-### `dbg.silent(value, label?)`
-
-Only logs when a value is new or has changed since the last call. Useful inside loops or hot paths.
-
-```js
-dbg.silent(status, 'status'); // logs only on first call or when status changes
-```
-
----
-
-### `dbg.log(...args)`
-
-A drop-in for `console.log` that automatically prepends `[file:line]` call-site info.
-
-```js
-dbg.log('Server started on port', port);
-```
-
----
-
-### `dbg.reset()`
-
-Clears the internal value history. Useful in tests to reset change-detection state between runs.
-
-```js
-dbg.reset();
-```
-
----
-
-### `dbg.enabled`
-
-Globally enable or disable all debugging features. Set this flag to `false` in production to ensure zero performance overhead.
-
-```js
-// Disable all lookman output
+```ts
 dbg.enabled = false;
+// or LOOKMAN_ENABLED=false
 ```
 
 ---
 
-## Promise Support
+## Core API
 
-`dbg()` automatically detects Promises and logs all three lifecycle stages:
+| API | Purpose |
+| --- | --- |
+| `dbg(value, label?)` | Log value + location + change detection |
+| `dbg.count(label?)` | Call counter |
+| `dbg.time` / `dbg.timeEnd` | Elapsed timing |
+| `dbg.group` / `dbg.groupEnd` | Indent related logs |
+| `dbg.table(data, label?)` | `console.table` with location |
+| `dbg.watch(obj, label?)` | Proxy-based deep mutation watch |
+| `dbg.track(obj, label?)` | In-place deep mutation track |
+| `dbg.log(...args)` | `console.log` with location |
+| `dbg.silent(value, label?)` | Log only when value changes |
+| `dbg.diff(prev, curr)` | Structured value diff |
+| `dbg.assert(cond, msg?)` | Debug assertion |
+| `dbg.once(key, value, label?)` | Log once per key |
+| `dbg.fn(fn, label?)` | Trace sync/async functions |
+| `dbg.configure(options)` | Runtime configuration |
+| `dbg.reset()` | Clear history / counters / once keys |
+| `dbg.enabled` | Global on/off |
 
-```js
-const data = await dbg(fetchUser(id), 'user');
-// → ⏳ pending...
-// → ✅ resolved (+88ms)  { id: 1, name: 'Alice' }
-```
-
-If the promise rejects, the error is logged and re-thrown so it doesn't swallow exceptions.
+Full reference: [docs/core-api.md](./docs/core-api.md)
 
 ---
 
-## Change Detection
+## Mutation hook
 
-Every call to `dbg()` compares the current value to the last seen value at the same location/label. Changes are highlighted automatically:
+> **Your JavaScript object changed. But who changed it?**
 
+```ts
+const state = dbg.track({ user: { name: 'Gurjot' } }, 'state');
+state.user.name = 'John';
 ```
- DBG  src/app.js:42 in render()  ⚡ CHANGED
-  count [number] 5
-  was: 4
+
+```text
+⚡ TRACK
+
+state.user.name
+"Gurjot" → "John"
+
+Location:
+app.ts:12
 ```
+
+---
+
+## Configuration
+
+```ts
+dbg.configure({
+  enabled: true,
+  colors: true,
+  timestamps: false,
+  location: true,
+  format: 'pretty', // or 'json'
+});
+```
+
+Environment variables: `LOOKMAN_ENABLED`, `LOOKMAN_FORMAT`, `LOOKMAN_COLORS`, `LOOKMAN_TIMESTAMPS`, `LOOKMAN_LOCATION`.
+
+See [docs/configuration.md](./docs/configuration.md).
+
+---
+
+## TypeScript
+
+```ts
+const user = dbg(user); // type preserved
+const watched = dbg.watch(user, 'user'); // same type
+```
+
+---
+
+## Framework notes
+
+Works in Node.js 18+, Bun, and modern bundlers (Vite, Next.js, React apps) when running in Node or browser-like environments that provide `console` and `Error.stack`. Browser support uses the same API; colors depend on the console.
+
+---
+
+## Performance
+
+When disabled, Lookman returns early before stack parsing, serialization, or Proxy work.
+
+Run local micro-benchmarks:
+
+```bash
+npm run bench
+```
+
+Do not treat micro-benchmarks as absolute truth — measure in your app.
+
+---
+
+## Documentation
+
+- [Getting started](./docs/getting-started.md)
+- [Core API](./docs/core-api.md)
+- [Promises](./docs/promises.md)
+- [Change detection](./docs/change-detection.md)
+- [Mutation tracking](./docs/mutation-tracking.md)
+- [Performance](./docs/performance.md)
+- [Configuration](./docs/configuration.md)
+- [JSON output](./docs/json-output.md)
+- [TypeScript](./docs/typescript.md)
+- [Troubleshooting](./docs/troubleshooting.md)
+- [Contributing](./docs/contributing.md)
+
+Examples live in [`examples/`](./examples/).
 
 ---
 
 ## License
 
-MIT
+MIT © Gurjot Saini

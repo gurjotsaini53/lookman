@@ -1,3 +1,8 @@
+/**
+ * LEGACY Lookman 1.x single-file source (historical reference).
+ * Production code lives in `src/` and publishes from `dist/`.
+ * @deprecated Use `import { dbg } from 'lookman'` (v2+).
+ */
 // lookman.js 
 
 const history = new Map();
